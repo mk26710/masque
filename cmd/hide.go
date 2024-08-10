@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/mk26710/masque/helpers"
 	"github.com/mk26710/masque/models"
@@ -52,16 +53,31 @@ func CreateAllMasqueEntries(targetAbs string) ([]models.MasqueEntry, error) {
 		return []models.MasqueEntry{}, fmt.Errorf("%s is already masqued", targetAbs)
 	}
 
-	var entries []models.MasqueEntry
+	wg := sync.WaitGroup{}
+	out := make(chan models.MasqueEntry, 1000)
 
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".masque.json") {
 			continue
 		}
 
-		if entry, err := CreateMasqueEntry(targetAbs, file); err == nil {
-			entries = append(entries, entry)
-		}
+		wg.Add(1)
+		go func(targetAbs string, file fs.DirEntry) {
+			defer wg.Done()
+			if entry, err := CreateMasqueEntry(targetAbs, file); err == nil {
+				out <- entry
+			}
+		}(targetAbs, file)
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	var entries []models.MasqueEntry
+	for entry := range out {
+		entries = append(entries, entry)
 	}
 
 	return entries, nil
