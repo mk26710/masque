@@ -1,6 +1,6 @@
 package models
 
-type HideEntry struct {
+type MasqueEntry struct {
 	NewName string `json:"newName"`
 	OldName string `json:"oldName"`
 }

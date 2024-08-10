@@ -46,7 +46,7 @@ func unhideRunner(cmd *cobra.Command, args []string) error {
 	}
 	defer file.Close()
 
-	var entries []models.HideEntry
+	var entries []models.MasqueEntry
 
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&entries); err != nil {

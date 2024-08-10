@@ -22,19 +22,19 @@ var hideCmd = &cobra.Command{
 	Run:   hideRunner,
 }
 
-func CreateHideEntry(targetAbs string, file fs.DirEntry) (models.HideEntry, error) {
+func CreateHideEntry(targetAbs string, file fs.DirEntry) (models.MasqueEntry, error) {
 	if file.IsDir() {
-		return models.HideEntry{}, fmt.Errorf("%s is not a directory", file)
+		return models.MasqueEntry{}, fmt.Errorf("%s is not a directory", file)
 	}
 
 	fp := filepath.Join(targetAbs, file.Name())
 
 	sha, err := helpers.GetSha256(fp)
 	if err != nil {
-		return models.HideEntry{}, fmt.Errorf("can not obtain SHA256 for %s", fp)
+		return models.MasqueEntry{}, fmt.Errorf("can not obtain SHA256 for %s", fp)
 	}
 
-	result := models.HideEntry{
+	result := models.MasqueEntry{
 		NewName: sha + filepath.Ext(fp),
 		OldName: file.Name(),
 	}
@@ -73,7 +73,7 @@ func hideRunner(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var entries []models.HideEntry
+	var entries []models.MasqueEntry
 
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".masque.json") {
