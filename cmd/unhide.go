@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sync"
 
 	"github.com/mk26710/masque/helpers"
 	"github.com/mk26710/masque/models"
@@ -54,26 +53,12 @@ func unhideRunner(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	wg := sync.WaitGroup{}
-	sem := make(chan struct{}, 100) // semaphore
-
 	for _, entry := range entries {
-		wg.Add(1)
-		sem <- struct{}{}
+		oldpath := path.Join(targetAbs, entry.NewName)
+		newpath := path.Join(targetAbs, entry.OldName)
 
-		go func() {
-			defer wg.Done()
-			defer func() { <-sem }()
-
-			oldpath := path.Join(targetAbs, entry.NewName)
-			newpath := path.Join(targetAbs, entry.OldName)
-
-			os.Rename(oldpath, newpath)
-		}()
+		os.Rename(oldpath, newpath)
 	}
-
-	wg.Wait()
-	close(sem)
 
 	if err := os.Remove(path.Join(targetAbs, helpers.MAP_FILE_NAME)); err != nil {
 		return err

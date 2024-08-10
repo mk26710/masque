@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/mk26710/masque/helpers"
 	"github.com/mk26710/masque/models"
@@ -74,29 +73,16 @@ func hideRunner(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	out := make(chan models.HideEntry, 100)
+	var entries []models.HideEntry
 
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".masque.json") {
 			continue
 		}
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if entry, err := CreateHideEntry(targetAbs, file); err == nil {
-				out <- entry
-			}
-		}()
-	}
-
-	wg.Wait()
-	close(out)
-
-	var entries []models.HideEntry
-	for entry := range out {
-		entries = append(entries, entry)
+		if entry, err := CreateHideEntry(targetAbs, file); err == nil {
+			entries = append(entries, entry)
+		}
 	}
 
 	j, err := json.MarshalIndent(entries, "", "  ")
@@ -108,28 +94,14 @@ func hideRunner(cmd *cobra.Command, args []string) {
 	mapPath := path.Join(targetAbs, "map.masque.json")
 	os.WriteFile(mapPath, j, 0644)
 
-	wg = sync.WaitGroup{}
-	sem := make(chan struct{}, 100)
-
 	for _, entry := range entries {
-		wg.Add(1)
-		sem <- struct{}{}
+		oldpath := path.Join(targetAbs, entry.OldName)
+		newpath := path.Join(targetAbs, entry.NewName)
 
-		go func() {
-			defer wg.Done()
-			defer func() { <-sem }()
-
-			oldpath := path.Join(targetAbs, entry.OldName)
-			newpath := path.Join(targetAbs, entry.NewName)
-
-			if err := os.Rename(oldpath, newpath); err != nil {
-				cmd.Println(err)
-			}
-		}()
+		if err := os.Rename(oldpath, newpath); err != nil {
+			cmd.Println(err)
+		}
 	}
-
-	wg.Wait()
-	close(sem)
 
 	cmd.Println("Done!")
 }
