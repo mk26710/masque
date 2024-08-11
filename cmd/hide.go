@@ -77,6 +77,7 @@ func CreateAllMasqueEntries(targetAbs string) ([]models.MasqueEntry, error) {
 
 	var entries []models.MasqueEntry
 	for entry := range out {
+		fmt.Printf("* %s -> %s\n", entry.OldName, entry.NewName)
 		entries = append(entries, entry)
 	}
 
@@ -132,7 +133,8 @@ func hideRunner(cmd *cobra.Command, args []string) error {
 		cmd.Println(err)
 	}
 
-	cmd.Println("Done!")
+	cmd.Println("------")
+	cmd.Printf("Masqued: %s\n", targetAbs)
 
 	return nil
 }
