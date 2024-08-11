@@ -58,13 +58,15 @@ func unhideRunner(cmd *cobra.Command, args []string) error {
 		newpath := path.Join(targetAbs, entry.OldName)
 
 		os.Rename(oldpath, newpath)
+
+		cmd.Printf("* %s -> %s\n", entry.NewName, entry.OldName)
 	}
 
 	if err := os.Remove(path.Join(targetAbs, helpers.MAP_FILE_NAME)); err != nil {
 		return err
 	}
 
-	cmd.Println("Unmasqued: ", targetAbs)
+	cmd.Printf("----------\nUnmasqued: %s\n", targetAbs)
 
 	return nil
 }
