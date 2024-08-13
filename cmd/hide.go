@@ -77,8 +77,12 @@ func CreateAllMasqueEntries(targetAbs string) ([]models.MasqueEntry, error) {
 
 	var entries []models.MasqueEntry
 	for entry := range out {
-		fmt.Printf("* %s -> %s\n", entry.OldName, entry.NewName)
+		fmt.Printf("* Prepared %s\n", entry.OldName)
 		entries = append(entries, entry)
+	}
+
+	if len(entries) > 0 {
+		fmt.Println("------------")
 	}
 
 	return entries, nil
@@ -87,12 +91,16 @@ func CreateAllMasqueEntries(targetAbs string) ([]models.MasqueEntry, error) {
 func HideMasqueEntris(targetAbs string, entries []models.MasqueEntry) []error {
 	var errors []error
 
+	fmt.Println("Renaming prepared files:")
+
 	for _, entry := range entries {
 		oldpath := path.Join(targetAbs, entry.OldName)
 		newpath := path.Join(targetAbs, entry.NewName)
 
 		if err := os.Rename(oldpath, newpath); err != nil {
 			errors = append(errors, err)
+		} else {
+			fmt.Printf("* %s -> %s\n", entry.OldName, entry.NewName)
 		}
 	}
 
@@ -107,13 +115,15 @@ func hideRunner(cmd *cobra.Command, args []string) error {
 	targetDir := args[0]
 
 	if exists := helpers.DirExists(targetDir); !exists {
-		return fmt.Errorf("tou have provided an invalid directory path")
+		return fmt.Errorf("you have provided an invalid directory path")
 	}
 
 	targetAbs, err := filepath.Abs(targetDir)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("Running masque hide:")
 
 	entries, err := CreateAllMasqueEntries(targetAbs)
 	if err != nil {
