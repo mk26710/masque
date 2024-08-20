@@ -1,6 +1,6 @@
 module github.com/mk26710/masque
 
-go 1.22.6
+go 1.23.0
 
 require github.com/spf13/cobra v1.8.1
 
