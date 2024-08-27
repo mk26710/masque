@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/fatih/color"
 	"github.com/mk26710/masque/helpers"
 	"github.com/mk26710/masque/models"
 	"github.com/spf13/cobra"
@@ -77,12 +78,8 @@ func CreateAllMasqueEntries(targetAbs string) ([]models.MasqueEntry, error) {
 
 	var entries []models.MasqueEntry
 	for entry := range out {
-		fmt.Printf("* Prepared %s\n", entry.OldName)
+		color.New(color.FgWhite).Printf("* Prepared %s\n", entry.OldName)
 		entries = append(entries, entry)
-	}
-
-	if len(entries) > 0 {
-		fmt.Println("------------")
 	}
 
 	return entries, nil
@@ -91,7 +88,7 @@ func CreateAllMasqueEntries(targetAbs string) ([]models.MasqueEntry, error) {
 func HideMasqueEntris(targetAbs string, entries []models.MasqueEntry) []error {
 	var errors []error
 
-	fmt.Println("Renaming prepared files:")
+	color.New(color.FgWhite).Add(color.Bold).Println("\nMasque being applied to following files:")
 
 	for _, entry := range entries {
 		oldpath := path.Join(targetAbs, entry.OldName)
@@ -100,7 +97,7 @@ func HideMasqueEntris(targetAbs string, entries []models.MasqueEntry) []error {
 		if err := os.Rename(oldpath, newpath); err != nil {
 			errors = append(errors, err)
 		} else {
-			fmt.Printf("* %s -> %s\n", entry.OldName, entry.NewName)
+			color.White("* %s -> %s\n", entry.OldName, entry.NewName)
 		}
 	}
 
@@ -123,14 +120,14 @@ func hideRunner(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println("Running masque hide:")
+	color.New(color.FgWhite).Add(color.Bold).Println("Preparing files to be masqued")
 
 	entries, err := CreateAllMasqueEntries(targetAbs)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Total number files to be masqued is %d. Proceed? [Y/N]: ", len(entries))
+	color.New(color.FgWhite).Add(color.Bold).Printf("\nTotal number files to be masqued is %d. Proceed? [Y/N]: ", len(entries))
 
 	answer, err := helpers.ReadLine()
 	if err != nil {
@@ -155,8 +152,9 @@ func hideRunner(cmd *cobra.Command, args []string) error {
 		cmd.Println(err)
 	}
 
-	cmd.Println("------")
-	cmd.Printf("Masqued: %s\n", targetAbs)
+	fmt.Println()
+	color.New(color.FgGreen).Print("Masque was applied to ")
+	color.New(color.FgYellow).Printf("%s\n\n", targetAbs)
 
 	return nil
 }
