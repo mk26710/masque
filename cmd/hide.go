@@ -127,7 +127,9 @@ func hideRunner(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	color.New(color.FgWhite).Add(color.Bold).Printf("\nTotal number files to be masqued is %d. Proceed? [Y/N]: ", len(entries))
+	color.New(color.FgWhite).Add(color.Bold).Print("\nTotal number files to be masqued is ")
+	color.New(color.FgHiBlue).Add(color.Bold).Print(len(entries))
+	color.New(color.FgWhite).Add(color.Bold).Print(". Proceed? [Y/N]: ")
 
 	answer, err := helpers.ReadLine()
 	if err != nil {
