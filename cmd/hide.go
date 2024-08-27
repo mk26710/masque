@@ -130,6 +130,18 @@ func hideRunner(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	fmt.Printf("Total number files to be masqued is %d. Proceed? [Y/N]: ", len(entries))
+
+	answer, err := helpers.ReadLine()
+	if err != nil {
+		return err
+	}
+
+	if !helpers.IsConfirm(answer) {
+		fmt.Println("Negative confirmation answer, cancelling operation")
+		return nil
+	}
+
 	j, err := json.MarshalIndent(entries, "", "  ")
 	if err != nil {
 		return err
