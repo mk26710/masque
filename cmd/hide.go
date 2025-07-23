@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/fatih/color"
+	"github.com/google/uuid"
 	"github.com/mk26710/masque/helpers"
 	"github.com/mk26710/masque/models"
 	"github.com/spf13/cobra"
@@ -24,6 +25,8 @@ var hideCmd = &cobra.Command{
 	RunE:  hideRunner,
 }
 
+var isUuid bool
+
 func CreateMasqueEntry(targetAbs string, file fs.DirEntry) (models.MasqueEntry, error) {
 	if file.IsDir() {
 		return models.MasqueEntry{}, fmt.Errorf("%s is not a directory", file)
@@ -31,13 +34,21 @@ func CreateMasqueEntry(targetAbs string, file fs.DirEntry) (models.MasqueEntry, 
 
 	fp := filepath.Join(targetAbs, file.Name())
 
-	sha, err := helpers.GetSha256(fp)
-	if err != nil {
-		return models.MasqueEntry{}, fmt.Errorf("can not obtain SHA256 for %s", fp)
+	var newBaseName string
+
+	if isUuid {
+		newBaseName = uuid.New().String()
+	} else {
+		sha, err := helpers.GetSha256(fp)
+		if err != nil {
+			return models.MasqueEntry{}, fmt.Errorf("can not obtain SHA256 for %s", fp)
+		}
+
+		newBaseName = sha
 	}
 
 	result := models.MasqueEntry{
-		NewName: sha + filepath.Ext(fp),
+		NewName: newBaseName + filepath.Ext(fp),
 		OldName: file.Name(),
 	}
 
@@ -162,5 +173,6 @@ func hideRunner(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
+	hideCmd.Flags().BoolVar(&isUuid, "uuid", false, "whether we should use UUID instead of reading file's SHA256")
 	rootCmd.AddCommand(hideCmd)
 }
